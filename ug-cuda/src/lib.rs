@@ -8,8 +8,8 @@
 //! # Example
 //!
 //! ```ignore
-//! use ug_cuda::runtime::Device;
-//! let device = Device::new(0)?;
+//! use ug_cuda::CudaDevice;
+//! let device = CudaDevice::new(0)?;
 //! ```
 
 pub use cudarc;
@@ -17,4 +17,11 @@ pub mod code_gen;
 pub mod gemm;
 pub mod runtime;
 
-pub use runtime::{Device, DeviceSlice};
+// Primary exports with explicit names
+pub use runtime::{CudaDevice, CudaSlice};
+
+// Re-export cudarc's DeviceSlice for convenience
+pub use cudarc::driver::DeviceSlice;
+
+// Backward compatibility aliases
+pub use runtime::{Device, Slice};

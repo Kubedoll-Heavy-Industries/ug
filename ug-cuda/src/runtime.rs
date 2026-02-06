@@ -55,7 +55,7 @@ pub struct Func {
 }
 
 impl Func {
-    pub fn new(device: &crate::Device, func: CudaFunction, cfg: LaunchConfig) -> Self {
+    pub fn new(device: &CudaDevice, func: CudaFunction, cfg: LaunchConfig) -> Self {
         Self { func, stream: device.cudarc_stream().clone(), cfg }
     }
 
@@ -79,11 +79,14 @@ macro_rules! bargs {
 }
 
 #[derive(Debug, Clone)]
-pub struct Device {
+pub struct CudaDevice {
     context: Arc<cudarc::driver::CudaContext>,
     stream: Arc<cudarc::driver::CudaStream>,
     blas: Arc<cudarc::cublas::CudaBlas>,
 }
+
+/// Type alias for backward compatibility.
+pub type Device = CudaDevice;
 
 // A GADT based solution would seem better than this variant but not sure how to do this in rust.
 #[derive(Debug)]
@@ -96,10 +99,13 @@ pub enum SliceInner {
 }
 
 #[derive(Debug)]
-pub struct Slice {
+pub struct CudaSlice {
     pub(crate) inner: SliceInner,
-    device: Device,
+    device: CudaDevice,
 }
+
+/// Type alias for backward compatibility.
+pub type Slice = CudaSlice;
 
 impl SliceInner {
     pub fn try_clone(&self) -> Result<Self> {
@@ -113,20 +119,20 @@ impl SliceInner {
     }
 }
 
-impl Slice {
+impl CudaSlice {
     pub fn try_clone(&self) -> Result<Self> {
         Ok(Self { inner: self.inner.try_clone()?, device: self.device.clone() })
     }
 }
 
 pub trait ToSlice: Sized {
-    fn slice(s: &Slice) -> Result<&cudarc::driver::CudaSlice<Self>>;
+    fn slice(s: &CudaSlice) -> Result<&cudarc::driver::CudaSlice<Self>>;
 }
 
 macro_rules! to_slice {
     ($ty:ty, $dtype:ident) => {
         impl ToSlice for $ty {
-            fn slice(s: &Slice) -> Result<&cudarc::driver::CudaSlice<Self>> {
+            fn slice(s: &CudaSlice) -> Result<&cudarc::driver::CudaSlice<Self>> {
                 match &s.inner {
                     SliceInner::$dtype(s) => Ok(s),
                     _ => ug::bail!(
@@ -145,13 +151,13 @@ to_slice!(half::bf16, BF16);
 to_slice!(i32, I32);
 to_slice!(i64, I64);
 
-impl Slice {
+impl CudaSlice {
     pub fn slice<D: ToSlice>(&self) -> Result<&cudarc::driver::CudaSlice<D>> {
         ToSlice::slice(self)
     }
 }
 
-impl Slice {
+impl CudaSlice {
     pub fn device_ptr<'a>(
         &'a self,
         stream: &'a Arc<CudaStream>,
@@ -179,7 +185,7 @@ impl Slice {
     }
 }
 
-impl Device {
+impl CudaDevice {
     pub fn new(device_index: usize) -> Result<Self> {
         let context = cudarc::driver::CudaContext::new(device_index).w()?;
         let stream = context.default_stream();
@@ -211,12 +217,12 @@ impl Device {
         Ok(func)
     }
 
-    pub fn zeros(&self, len: usize) -> Result<Slice> {
+    pub fn zeros(&self, len: usize) -> Result<CudaSlice> {
         let slice = self.stream.alloc_zeros::<f32>(len).w()?;
-        Ok(Slice { inner: SliceInner::F32(slice), device: self.clone() })
+        Ok(CudaSlice { inner: SliceInner::F32(slice), device: self.clone() })
     }
 
-    pub fn slice_from_values<D: WithDType>(&self, vs: &[D]) -> Result<Slice> {
+    pub fn slice_from_values<D: WithDType>(&self, vs: &[D]) -> Result<CudaSlice> {
         let mut slice = unsafe { self.allocate_uninit(D::DTYPE, vs.len())? };
         slice.copy_host_to_device(vs)?;
         Ok(slice)
@@ -228,8 +234,8 @@ impl Device {
     }
 }
 
-impl ug::Device for Device {
-    type Slice = Slice;
+impl ug::Device for CudaDevice {
+    type Slice = CudaSlice;
     type Func = Func;
 
     #[allow(clippy::missing_transmute_annotations)]
@@ -256,7 +262,7 @@ impl ug::Device for Device {
                 SliceInner::I64(slice)
             }
         };
-        Ok(Slice { inner, device: self.clone() })
+        Ok(CudaSlice { inner, device: self.clone() })
     }
 
     fn synchronize(&self) -> Result<()> {
@@ -367,8 +373,8 @@ impl ug::Device for Device {
     }
 }
 
-impl ug::Slice for Slice {
-    type Device = Device;
+impl ug::Slice for CudaSlice {
+    type Device = CudaDevice;
     fn dtype(&self) -> ug::DType {
         match &self.inner {
             SliceInner::F32(_) => ug::DType::F32,

@@ -8,12 +8,16 @@
 //! # Example
 //!
 //! ```ignore
-//! use ug_metal::runtime::Device;
-//! let device = Device::new()?;
+//! use ug_metal::MetalDevice;
+//! let device = MetalDevice::new()?;
 //! ```
 
 pub mod code_gen;
 pub mod runtime;
 pub mod utils;
 
+// Primary exports with explicit names
+pub use runtime::{MetalDevice, MetalSlice};
+
+// Backward compatibility aliases
 pub use runtime::{Device, Slice};

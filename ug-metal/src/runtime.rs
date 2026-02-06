@@ -37,7 +37,7 @@ impl KernelId {
 pub struct Func {
     inner: metal::Function,
     launch_config: ug::lang::LaunchConfig,
-    device: Device,
+    device: MetalDevice,
 }
 
 impl Func {
@@ -49,12 +49,15 @@ impl Func {
 }
 
 #[derive(Debug, Clone)]
-pub struct Device {
+pub struct MetalDevice {
     device: metal::Device,
     cq: metal::CommandQueue,
 }
 
-impl Device {
+/// Type alias for backward compatibility.
+pub type Device = MetalDevice;
+
+impl MetalDevice {
     pub fn new_command_queue(&self) -> metal::CommandQueue {
         self.device.new_command_queue()
     }
@@ -101,8 +104,8 @@ impl Device {
     }
 }
 
-impl ug::Device for Device {
-    type Slice = Slice;
+impl ug::Device for MetalDevice {
+    type Slice = MetalSlice;
     type Func = Func;
 
     fn run(&self, f: &Self::Func, args: &mut [&mut Self::Slice]) -> Result<()> {
@@ -177,7 +180,7 @@ impl ug::Device for Device {
         let options = metal::MTLResourceOptions::StorageModeManaged;
         let bytes_len = (len * dtype.size_in_bytes()) as u64;
         let buffer = self.device.new_buffer(bytes_len, options);
-        Ok(Slice { buffer, device: self.clone(), len, dtype })
+        Ok(MetalSlice { buffer, device: self.clone(), len, dtype })
     }
 
     fn use_grid() -> bool {
@@ -225,15 +228,18 @@ impl<T: Clone> SliceT<T> {
 
 #[allow(unused)]
 #[derive(Debug, Clone)]
-pub struct Slice {
+pub struct MetalSlice {
     buffer: metal::Buffer,
-    device: Device,
+    device: MetalDevice,
     dtype: ug::DType,
     len: usize,
 }
 
-impl ug::Slice for Slice {
-    type Device = Device;
+/// Type alias for backward compatibility.
+pub type Slice = MetalSlice;
+
+impl ug::Slice for MetalSlice {
+    type Device = MetalDevice;
 
     fn len(&self) -> usize {
         self.len
@@ -287,7 +293,7 @@ impl ug::Slice for Slice {
     }
 }
 
-impl Slice {
+impl MetalSlice {
     pub fn buffer(&self) -> &metal::Buffer {
         &self.buffer
     }
@@ -383,7 +389,7 @@ impl ConstantValues {
 
 #[allow(clippy::too_many_arguments)]
 fn call_mlx_gemm(
-    device: &Device,
+    device: &MetalDevice,
     encoder: &metal::ComputeCommandEncoderRef,
     dtype: GemmDType,
     (b, m, n, k): (usize, usize, usize, usize),

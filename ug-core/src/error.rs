@@ -49,6 +49,24 @@ pub enum Error {
 
     #[error("unsupported safetensor dtype {0:?}")]
     UnsupportedSafeTensorDtype(safetensors::Dtype),
+
+    /// Shape mismatch error with structured information.
+    #[error("shape mismatch: expected {expected:?}, got {got:?}")]
+    ShapeMismatch {
+        expected: crate::Shape,
+        got: crate::Shape,
+    },
+
+    /// DType mismatch error with structured information.
+    #[error("dtype mismatch: expected {expected:?}, got {got:?}")]
+    DTypeMismatch {
+        expected: crate::DType,
+        got: crate::DType,
+    },
+
+    /// Dimension out of bounds error.
+    #[error("dimension {dim} out of bounds for tensor with {ndim} dimensions")]
+    DimOutOfBounds { dim: usize, ndim: usize },
 }
 
 pub type Result<T> = std::result::Result<T, Error>;

@@ -764,4 +764,59 @@ impl<D: Device> LazyBuffer<D> {
         }
         Ok(vs)
     }
+
+    /// Element-wise addition.
+    pub fn add(&self, rhs: &Self) -> Result<Self> {
+        self.binary(crate::lang::BinaryOp::Add, rhs.clone())
+    }
+
+    /// Element-wise subtraction.
+    pub fn sub(&self, rhs: &Self) -> Result<Self> {
+        self.binary(crate::lang::BinaryOp::Sub, rhs.clone())
+    }
+
+    /// Element-wise multiplication.
+    pub fn mul(&self, rhs: &Self) -> Result<Self> {
+        self.binary(crate::lang::BinaryOp::Mul, rhs.clone())
+    }
+
+    /// Element-wise division.
+    pub fn div(&self, rhs: &Self) -> Result<Self> {
+        self.binary(crate::lang::BinaryOp::Div, rhs.clone())
+    }
+}
+
+// Operator overloading for LazyBuffer references.
+// These return Result<LazyBuffer<D>> since the operations can fail.
+
+impl<D: Device> std::ops::Add for &LazyBuffer<D> {
+    type Output = Result<LazyBuffer<D>>;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        self.binary(crate::lang::BinaryOp::Add, rhs.clone())
+    }
+}
+
+impl<D: Device> std::ops::Sub for &LazyBuffer<D> {
+    type Output = Result<LazyBuffer<D>>;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        self.binary(crate::lang::BinaryOp::Sub, rhs.clone())
+    }
+}
+
+impl<D: Device> std::ops::Mul for &LazyBuffer<D> {
+    type Output = Result<LazyBuffer<D>>;
+
+    fn mul(self, rhs: Self) -> Self::Output {
+        self.binary(crate::lang::BinaryOp::Mul, rhs.clone())
+    }
+}
+
+impl<D: Device> std::ops::Div for &LazyBuffer<D> {
+    type Output = Result<LazyBuffer<D>>;
+
+    fn div(self, rhs: Self) -> Self::Output {
+        self.binary(crate::lang::BinaryOp::Div, rhs.clone())
+    }
 }
