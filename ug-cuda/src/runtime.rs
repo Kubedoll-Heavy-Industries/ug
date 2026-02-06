@@ -1,3 +1,4 @@
+use cudarc::driver::TryClone;
 pub use cudarc::driver::{
     CudaFunction, CudaStream, DevicePtr, DevicePtrMut, DeviceSlice, LaunchConfig,
 };
@@ -85,7 +86,7 @@ pub struct Device {
 }
 
 // A GADT based solution would seem better than this variant but not sure how to do this in rust.
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub enum SliceInner {
     F32(cudarc::driver::CudaSlice<f32>),
     F16(cudarc::driver::CudaSlice<half::f16>),
@@ -94,10 +95,28 @@ pub enum SliceInner {
     I64(cudarc::driver::CudaSlice<i64>),
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct Slice {
     pub(crate) inner: SliceInner,
     device: Device,
+}
+
+impl SliceInner {
+    pub fn try_clone(&self) -> Result<Self> {
+        Ok(match self {
+            SliceInner::F32(s) => SliceInner::F32(s.try_clone().w()?),
+            SliceInner::F16(s) => SliceInner::F16(s.try_clone().w()?),
+            SliceInner::BF16(s) => SliceInner::BF16(s.try_clone().w()?),
+            SliceInner::I32(s) => SliceInner::I32(s.try_clone().w()?),
+            SliceInner::I64(s) => SliceInner::I64(s.try_clone().w()?),
+        })
+    }
+}
+
+impl Slice {
+    pub fn try_clone(&self) -> Result<Self> {
+        Ok(Self { inner: self.inner.try_clone()?, device: self.device.clone() })
+    }
 }
 
 pub trait ToSlice: Sized {
@@ -251,7 +270,7 @@ impl ug::Device for Device {
             Some(name) => &format!("ug_{name}_{kernel_id}"),
             None => &format!("ug_{kernel_id}"),
         };
-        crate::code_gen::gen(&mut cu_code, func_name, kernel)?;
+        crate::code_gen::generate(&mut cu_code, func_name, kernel)?;
         let cu_code = String::from_utf8(cu_code)?;
         let cfg = kernel.launch_config();
         let cfg = LaunchConfig {
@@ -365,8 +384,8 @@ impl ug::Slice for Slice {
     }
 
     fn copy_host_to_device<DT: WithDType>(&mut self, src: &[DT]) -> Result<()> {
-        use ug::CpuStorageRef as C;
         use SliceInner as S;
+        use ug::CpuStorageRef as C;
         match (&mut self.inner, DT::to_cpu_storage(src)) {
             (S::BF16(dst), C::BF16(src)) => self.device.stream.memcpy_htod(src, dst).w()?,
             (S::F16(dst), C::F16(src)) => self.device.stream.memcpy_htod(src, dst).w()?,
@@ -379,8 +398,8 @@ impl ug::Slice for Slice {
     }
 
     fn copy_device_to_host<DT: WithDType>(&self, dst: &mut [DT]) -> Result<()> {
-        use ug::CpuStorageRefMut as C;
         use SliceInner as S;
+        use ug::CpuStorageRefMut as C;
         match (&self.inner, DT::to_cpu_storage_mut(dst)) {
             (S::BF16(src), C::BF16(dst)) => self.device.stream.memcpy_dtoh(src, dst).w()?,
             (S::F16(src), C::F16(dst)) => self.device.stream.memcpy_dtoh(src, dst).w()?,

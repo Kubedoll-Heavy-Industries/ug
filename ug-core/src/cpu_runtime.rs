@@ -281,7 +281,7 @@ impl crate::Device for CpuDevice {
             Some(name) => format!("ugc_{name}_{pid}_{kernel_id}"),
             None => format!("ugc_{pid}_{kernel_id}"),
         };
-        crate::cpu_code_gen::gen(&mut c_code, &func_name, kernel)?;
+        crate::cpu_code_gen::generate(&mut c_code, &func_name, kernel)?;
         self.compile_c(&c_code, func_name)
     }
 
@@ -439,15 +439,15 @@ impl Func {
     }
 
     #[allow(clippy::missing_safety_doc)]
-    pub unsafe fn run0(&self) -> Result<()> {
+    pub unsafe fn run0(&self) -> Result<()> { unsafe {
         let func_name = self.func_name.as_bytes();
         let symbol: libloading::Symbol<unsafe extern "C" fn()> = self.lib.get(func_name)?;
         symbol();
         Ok(())
-    }
+    }}
 
     #[allow(clippy::missing_safety_doc)]
-    pub unsafe fn run3<T>(&self, v1: &mut [T], v2: &mut [T], v3: &mut [T]) -> Result<()> {
+    pub unsafe fn run3<T>(&self, v1: &mut [T], v2: &mut [T], v3: &mut [T]) -> Result<()> { unsafe {
         use std::ffi::c_void;
 
         let func_name = self.func_name.as_bytes();
@@ -460,7 +460,7 @@ impl Func {
             v3.as_mut_ptr() as *mut c_void,
         );
         Ok(())
-    }
+    }}
 }
 
 impl crate::CpuDevice {
@@ -556,7 +556,7 @@ impl MatMul {
         rhs: &[T],
         rhs_l: &Layout,
     ) -> Result<()> {
-        use gemm::{gemm, Parallelism};
+        use gemm::{Parallelism, gemm};
 
         match T::DTYPE {
             DType::F16 | DType::F32 => {}

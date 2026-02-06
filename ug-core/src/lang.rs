@@ -40,7 +40,7 @@ pub struct LaunchConfig {
 
 impl LaunchConfig {
     pub fn for_num_elems(n: u32) -> Self {
-        LaunchConfig { grid_dim: n.div_ceil(32), block_dim: 32, shared_mem: 0 }
+        LaunchConfig { grid_dim: n.div_ceil(256), block_dim: 256, shared_mem: 0 }
     }
 }
 

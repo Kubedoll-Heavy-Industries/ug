@@ -1,6 +1,6 @@
+use crate::Result;
 use crate::block::{Block, Id};
 use crate::lang::{self, ssa};
-use crate::Result;
 use ssa::Instr as SsaI;
 
 impl lang::ExprNode {

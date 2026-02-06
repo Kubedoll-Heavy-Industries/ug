@@ -18,7 +18,7 @@ impl MmapedSafetensors {
     /// # Safety
     ///
     /// The unsafe is inherited from [`memmap2::MmapOptions`].
-    pub unsafe fn new<P: AsRef<Path>>(p: P) -> Result<Self> {
+    pub unsafe fn new<P: AsRef<Path>>(p: P) -> Result<Self> { unsafe {
         let p = p.as_ref();
         let file = std::fs::File::open(p).map_err(|e| Error::from(e).with_path(p))?;
         let file =
@@ -32,7 +32,7 @@ impl MmapedSafetensors {
             },
         )?;
         Ok(Self { safetensors: vec![safetensors], routing: None })
-    }
+    }}
 
     /// Creates a wrapper around multiple memory mapped file and deserialize the safetensors headers.
     ///
@@ -41,7 +41,7 @@ impl MmapedSafetensors {
     /// # Safety
     ///
     /// The unsafe is inherited from [`memmap2::MmapOptions`].
-    pub unsafe fn multi<P: AsRef<Path>>(paths: &[P]) -> Result<Self> {
+    pub unsafe fn multi<P: AsRef<Path>>(paths: &[P]) -> Result<Self> { unsafe {
         let mut routing = HashMap::new();
         let mut safetensors = vec![];
         for (index, p) in paths.iter().enumerate() {
@@ -63,7 +63,7 @@ impl MmapedSafetensors {
             safetensors.push(data)
         }
         Ok(Self { safetensors, routing: Some(routing) })
-    }
+    }}
 
     pub fn load<D: Device>(&self, name: &str, device: &D) -> Result<crate::LazyBuffer<D>> {
         let (shape, slice) = self.load_slice(name, device)?;
@@ -295,7 +295,7 @@ impl MmapedSafetensors {
 pub fn convert_slice<T: WithDType>(data: &[u8]) -> std::borrow::Cow<'_, [T]> {
     let size_in_bytes = T::DTYPE.size_in_bytes();
     let elem_count = data.len() / size_in_bytes;
-    if (data.as_ptr() as usize) % size_in_bytes == 0 {
+    if (data.as_ptr() as usize).is_multiple_of(size_in_bytes) {
         // SAFETY This is safe because we just checked that this
         // was correctly aligned.
         let data: &[T] =

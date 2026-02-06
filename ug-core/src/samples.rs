@@ -1,7 +1,7 @@
 pub mod ssa {
-    use crate::lang::ssa;
-    use crate::lang::ssa::{BinaryOp, Const, DType, Instr as I, Kernel, VarId, A};
     use crate::Result;
+    use crate::lang::ssa;
+    use crate::lang::ssa::{A, BinaryOp, Const, DType, Instr as I, Kernel, VarId};
 
     fn arg(index: usize, dtype: DType) -> I {
         I::DefineGlobal { index, dtype }
@@ -71,7 +71,7 @@ pub mod ssa {
     }
 
     pub fn exp_block(dim2: usize, block_size: usize) -> Result<Kernel> {
-        if dim2 % block_size != 0 {
+        if !dim2.is_multiple_of(block_size) {
             crate::bail!("last-dim {dim2} must be divisible by block size {block_size}")
         }
 
@@ -183,7 +183,7 @@ pub mod ssa {
     }
 
     pub fn softmax_block(_dim1: usize, dim2: usize, block_size: usize) -> Result<Kernel> {
-        if dim2 % block_size != 0 {
+        if !dim2.is_multiple_of(block_size) {
             crate::bail!("last-dim {dim2} must be divisible by block size {block_size}")
         }
         let per_block = dim2 / block_size;
@@ -233,8 +233,8 @@ pub mod ssa {
 }
 
 pub mod op {
-    use crate::lang::op::{self, Arg, DType, Kernel, Layout};
     use crate::Result;
+    use crate::lang::op::{self, Arg, DType, Kernel, Layout};
 
     pub fn softmax(dim1: usize, dim2: usize) -> Result<Kernel> {
         let layout = Layout::from_shape(&[dim1, dim2]);

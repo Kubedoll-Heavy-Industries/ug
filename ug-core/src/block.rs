@@ -1,5 +1,5 @@
-use crate::lang::{self, ssa};
 use crate::Result;
+use crate::lang::{self, ssa};
 use ssa::Instr as SsaI;
 
 // ssa::Instr are indexed based on their line number which is not convenient when

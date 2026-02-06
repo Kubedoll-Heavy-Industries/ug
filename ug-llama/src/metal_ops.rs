@@ -1,6 +1,6 @@
 use crate::LB;
 use std::sync::OnceLock;
-use ug::{lang::LaunchConfig, Result};
+use ug::{Result, lang::LaunchConfig};
 use ug_metal::runtime::{Func, Slice};
 
 const CAT_M: &str = include_str!("cat.metal");

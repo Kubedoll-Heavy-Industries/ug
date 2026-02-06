@@ -262,7 +262,7 @@ mod op {
 }
 
 mod ssa {
-    use super::{w, DType};
+    use super::{DType, w};
     use pyo3::prelude::*;
     use ug::lang::ssa;
 
@@ -395,7 +395,7 @@ mod ssa {
 
         fn cuda_code(&self, name: &str) -> PyResult<String> {
             let mut buf = vec![];
-            ug_cuda::code_gen::gen(&mut buf, name, &self.0).map_err(w)?;
+            ug_cuda::code_gen::generate(&mut buf, name, &self.0).map_err(w)?;
             let cuda_code = String::from_utf8(buf)?;
             Ok(cuda_code)
         }

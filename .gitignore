@@ -21,3 +21,4 @@ model.safetensors
 flamegraph.svg
 trace*.json
 report*sqlite
+notes/

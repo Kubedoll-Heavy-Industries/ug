@@ -1,4 +1,4 @@
-use crate::{bail, CpuStorageRef, CpuStorageRefMut, Result};
+use crate::{CpuStorageRef, CpuStorageRefMut, Result, bail};
 use half::{bf16, f16};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]

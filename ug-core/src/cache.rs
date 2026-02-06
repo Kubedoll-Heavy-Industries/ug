@@ -1,6 +1,6 @@
 //! Compilation cache utilities.
-use crate::lang::op::{self, ArgId, Ast};
 use crate::Result;
+use crate::lang::op::{self, ArgId, Ast};
 use std::collections::HashMap;
 
 type Ssa = Vec<crate::lang::ssa::Instr>;

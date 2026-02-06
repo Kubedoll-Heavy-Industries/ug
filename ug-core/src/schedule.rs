@@ -1,6 +1,6 @@
 use crate::lang::op::{ArgId, Ast};
 use crate::{Device, Layout, LazyBuffer, Result};
-use std::collections::HashMap;
+use rustc_hash::FxHashMap;
 
 type Args<D> = Vec<(ArgId, LazyBuffer<D>)>;
 
@@ -61,7 +61,7 @@ pub enum ScheduleItem<D: Device> {
 pub struct Schedule<D: Device> {
     /// Elements in `items` are topologically sorted so that they can be run in order.
     items: Vec<ScheduleItem<D>>,
-    per_arg_id: HashMap<ArgId, LazyBuffer<D>>,
+    per_arg_id: FxHashMap<ArgId, LazyBuffer<D>>,
     span_compile: tracing::Span,
     span_kernel: tracing::Span,
     device: D,
@@ -81,7 +81,7 @@ impl<D: Device> Schedule<D> {
         } else {
             buffers[0].device().clone()
         };
-        let mut cnts = HashMap::new();
+        let mut cnts = FxHashMap::default();
         for buffer in buffers.iter() {
             id_cnts(buffer, &mut cnts)?
         }
@@ -175,11 +175,12 @@ impl<D: Device> Schedule<D> {
                             if dims.len() >= 2 && dims[1].1 > 1 {
                                 // TODO: It might be better to use the layout to determine the
                                 // thread dim or to look at reduce dims.
+                                // Block size of 256 provides better GPU occupancy than 32.
                                 crate::lower_op::Opts::default()
                                     .with_block_axis(dims[0].0)
-                                    .with_thread_block(dims[1].0, 32)
+                                    .with_thread_block(dims[1].0, 256)
                             } else if dims.len() > 1 && dims[0].1 > 1 {
-                                crate::lower_op::Opts::default().with_global_axis(dims[0].0, 32)
+                                crate::lower_op::Opts::default().with_global_axis(dims[0].0, 256)
                             } else {
                                 crate::lower_op::Opts::default()
                             }
@@ -307,14 +308,19 @@ impl<D: Device> CompiledSchedule<D> {
 
 struct Context<D: Device> {
     items: Vec<ScheduleItem<D>>,
-    per_arg_id: HashMap<ArgId, LazyBuffer<D>>,
-    ast_cache: HashMap<crate::lazy_buffer::Id, Ast>,
-    id_cnts: HashMap<crate::lazy_buffer::Id, usize>,
+    per_arg_id: FxHashMap<ArgId, LazyBuffer<D>>,
+    ast_cache: FxHashMap<crate::lazy_buffer::Id, Ast>,
+    id_cnts: FxHashMap<crate::lazy_buffer::Id, usize>,
 }
 
 impl<D: Device> Context<D> {
-    fn new(id_cnts: HashMap<crate::lazy_buffer::Id, usize>) -> Self {
-        Self { items: vec![], per_arg_id: HashMap::new(), ast_cache: HashMap::new(), id_cnts }
+    fn new(id_cnts: FxHashMap<crate::lazy_buffer::Id, usize>) -> Self {
+        Self {
+            items: vec![],
+            per_arg_id: FxHashMap::default(),
+            ast_cache: FxHashMap::default(),
+            id_cnts,
+        }
     }
 
     fn get_arg_id(&self, arg_id: ArgId) -> Result<&LazyBuffer<D>> {
@@ -479,7 +485,7 @@ impl<D: Device> Context<D> {
 /// Note that realized nodes stop the propagation.
 fn id_cnts<D: Device>(
     b: &LazyBuffer<D>,
-    cnts: &mut HashMap<crate::lazy_buffer::Id, usize>,
+    cnts: &mut FxHashMap<crate::lazy_buffer::Id, usize>,
 ) -> Result<()> {
     use crate::lazy_buffer::Op;
 

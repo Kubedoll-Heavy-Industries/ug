@@ -28,14 +28,14 @@ struct Args {
 }
 
 fn run_one(args: &Args, n_cols: usize) -> Result<()> {
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
     let n_rows = args.n_rows;
     let (ssa_kernel, block_dim) = match args.which {
         Which::Exp => (ug::samples::ssa::exp(n_cols)?, n_cols),
         Which::ExpBlock => {
             let bs = if n_cols <= 1024 {
                 n_cols
-            } else if n_cols % 1024 != 0 {
+            } else if !n_cols.is_multiple_of(1024) {
                 512
             } else {
                 1024
@@ -46,7 +46,7 @@ fn run_one(args: &Args, n_cols: usize) -> Result<()> {
         Which::SsaSoftmaxReduce => {
             let bs = if n_cols <= 1024 {
                 n_cols
-            } else if n_cols % 1024 != 0 {
+            } else if !n_cols.is_multiple_of(1024) {
                 512
             } else {
                 1024
@@ -61,7 +61,7 @@ fn run_one(args: &Args, n_cols: usize) -> Result<()> {
         }
     };
     let mut buf = vec![];
-    ug_metal::code_gen::gen(&mut buf, "mykernel", &ssa_kernel)?;
+    ug_metal::code_gen::generate(&mut buf, "mykernel", &ssa_kernel)?;
     let metal_code = String::from_utf8(buf)?;
     if args.verbose {
         println!("SSA\n{ssa_kernel:?}");
@@ -76,7 +76,7 @@ fn run_one(args: &Args, n_cols: usize) -> Result<()> {
     let func = device.compile_metal(&metal_code, "mykernel", launch_config)?;
     let n_elements = n_rows * n_cols;
     let res = device.zeros::<f32>(n_elements)?;
-    let arg: Vec<f32> = (0..n_elements).map(|_| rng.gen()).collect();
+    let arg: Vec<f32> = (0..n_elements).map(|_| rng.random()).collect();
     let arg = device.slice_from_values(&arg)?;
     let cq = device.new_command_queue();
     let run = || {
@@ -123,7 +123,8 @@ fn main() -> Result<()> {
     let args = Args::parse();
     println!("{args:?}");
     if !args.disable_metal_validation {
-        std::env::set_var("METAL_DEVICE_WRAPPER_TYPE", "1")
+        // SAFETY: This is called at program startup before any other threads are spawned
+        unsafe { std::env::set_var("METAL_DEVICE_WRAPPER_TYPE", "1") }
     }
     objc::rc::autoreleasepool(|| {
         for n_cols in [128, 256, 512, 768, 1024, 1536, 2048, 3072, 4096] {

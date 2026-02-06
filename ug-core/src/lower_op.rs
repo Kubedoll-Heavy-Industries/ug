@@ -1,6 +1,6 @@
 use crate::block::{Block, Id};
 use crate::lang::{self, op::Ast, ssa};
-use crate::{bail, Result, Shape};
+use crate::{Result, Shape, bail};
 use ssa::{DType, Instr as SsaI};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -540,13 +540,9 @@ impl lang::op::Kernel {
         let args = self.args.iter().enumerate().map(|(i, a)| (*a, i)).collect();
         let grid_dim = match opts.block_axis() {
             Some(idx) => {
-                let local = opts.thread_block().map_or(1, |v| {
-                    if v.dim == idx {
-                        v.block_dim as u32
-                    } else {
-                        1
-                    }
-                });
+                let local = opts
+                    .thread_block()
+                    .map_or(1, |v| if v.dim == idx { v.block_dim as u32 } else { 1 });
                 self.ops[0].layout.dims().get(idx).map_or(1, |v| *v as u32).div_ceil(local)
             }
             None => 1,

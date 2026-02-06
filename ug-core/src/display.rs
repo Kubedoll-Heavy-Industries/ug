@@ -81,15 +81,15 @@ pub fn print_options() -> &'static std::sync::Mutex<PrinterOptions> {
 }
 
 pub fn set_print_options(options: PrinterOptions) {
-    *PRINT_OPTS.lock().unwrap() = options
+    *PRINT_OPTS.lock().expect("print options mutex poisoned") = options
 }
 
 pub fn set_print_options_default() {
-    *PRINT_OPTS.lock().unwrap() = PrinterOptions::const_default()
+    *PRINT_OPTS.lock().expect("print options mutex poisoned") = PrinterOptions::const_default()
 }
 
 pub fn set_print_options_short() {
-    *PRINT_OPTS.lock().unwrap() = PrinterOptions {
+    *PRINT_OPTS.lock().expect("print options mutex poisoned") = PrinterOptions {
         precision: 2,
         threshold: 1000,
         edge_items: 2,
@@ -99,7 +99,7 @@ pub fn set_print_options_short() {
 }
 
 pub fn set_print_options_full() {
-    *PRINT_OPTS.lock().unwrap() = PrinterOptions {
+    *PRINT_OPTS.lock().expect("print options mutex poisoned") = PrinterOptions {
         precision: 4,
         threshold: usize::MAX,
         edge_items: 3,
@@ -109,23 +109,23 @@ pub fn set_print_options_full() {
 }
 
 pub fn set_line_width(line_width: usize) {
-    PRINT_OPTS.lock().unwrap().line_width = line_width
+    PRINT_OPTS.lock().expect("print options mutex poisoned").line_width = line_width
 }
 
 pub fn set_precision(precision: usize) {
-    PRINT_OPTS.lock().unwrap().precision = precision
+    PRINT_OPTS.lock().expect("print options mutex poisoned").precision = precision
 }
 
 pub fn set_edge_items(edge_items: usize) {
-    PRINT_OPTS.lock().unwrap().edge_items = edge_items
+    PRINT_OPTS.lock().expect("print options mutex poisoned").edge_items = edge_items
 }
 
 pub fn set_threshold(threshold: usize) {
-    PRINT_OPTS.lock().unwrap().threshold = threshold
+    PRINT_OPTS.lock().expect("print options mutex poisoned").threshold = threshold
 }
 
 pub fn set_sci_mode(sci_mode: Option<bool>) {
-    PRINT_OPTS.lock().unwrap().sci_mode = sci_mode
+    PRINT_OPTS.lock().expect("print options mutex poisoned").sci_mode = sci_mode
 }
 
 struct FmtSize {
@@ -405,7 +405,7 @@ impl<D: Device> std::fmt::Display for LB<D> {
         if let Err(err) = self.realize() {
             return write!(f, "{err:?}");
         }
-        let po = PRINT_OPTS.lock().unwrap();
+        let po = PRINT_OPTS.lock().expect("print options mutex poisoned");
         let summarize = self.elem_count() > po.threshold;
         let to_display = if summarize {
             match get_summarized_data(self, po.edge_items) {

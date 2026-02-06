@@ -25,7 +25,7 @@ struct Args {
 }
 
 fn run_one(args: &Args, n_cols: usize) -> Result<()> {
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
     let n_rows = args.n_rows;
     let (ssa_kernel, block_dim) = match args.which {
         Which::Exp => (ug::samples::ssa::exp(n_cols)?, n_cols),
@@ -58,7 +58,7 @@ fn run_one(args: &Args, n_cols: usize) -> Result<()> {
         }
     };
     let mut buf = vec![];
-    ug_cuda::code_gen::gen(&mut buf, "mykernel", &ssa_kernel)?;
+    ug_cuda::code_gen::generate(&mut buf, "mykernel", &ssa_kernel)?;
     let cuda_code = String::from_utf8(buf)?;
     if args.verbose {
         println!("SSA\n{ssa_kernel:?}");
@@ -74,7 +74,7 @@ fn run_one(args: &Args, n_cols: usize) -> Result<()> {
     let func = ug_cuda::runtime::Func::new(&device, func, cfg);
     let n_elements = n_rows * n_cols;
     let mut res = device.zeros(n_elements)?;
-    let arg: Vec<f32> = (0..n_elements).map(|_| rng.gen()).collect();
+    let arg: Vec<f32> = (0..n_elements).map(|_| rng.random()).collect();
     let mut arg = device.slice_from_values(&arg)?;
     let mut run = || {
         use ug::Device;

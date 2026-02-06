@@ -1,5 +1,5 @@
-use ug::lang::ssa;
 use ug::Result;
+use ug::lang::ssa;
 
 struct V(ssa::VarId);
 
@@ -65,7 +65,7 @@ impl std::fmt::Display for D {
     }
 }
 
-pub fn gen<W: std::io::Write>(w: &mut W, func_name: &str, kernel: &ssa::Kernel) -> Result<()> {
+pub fn generate<W: std::io::Write>(w: &mut W, func_name: &str, kernel: &ssa::Kernel) -> Result<()> {
     let instrs = kernel.instrs();
     let contains_reduce_local = instrs.iter().any(|v| matches!(v, ssa::Instr::ReduceLocal { .. }));
     if contains_reduce_local {

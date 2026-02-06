@@ -1,5 +1,5 @@
-use crate::lang::ssa::{self, Const, Instr, Kernel, VarId};
 use crate::Result;
+use crate::lang::ssa::{self, Const, Instr, Kernel, VarId};
 use half::{bf16, f16};
 
 mod buffer {
@@ -140,19 +140,11 @@ impl<const N: usize> Value<N> {
     }
 
     pub fn as_i32(&self) -> Result<&W<i32, N>> {
-        if let Self::I32(v) = self {
-            Ok(v)
-        } else {
-            crate::bail!("not an i32 {self:?}")
-        }
+        if let Self::I32(v) = self { Ok(v) } else { crate::bail!("not an i32 {self:?}") }
     }
 
     pub fn as_f32(&self) -> Result<&W<f32, N>> {
-        if let Self::F32(v) = self {
-            Ok(v)
-        } else {
-            crate::bail!("not a f32 {self:?}")
-        }
+        if let Self::F32(v) = self { Ok(v) } else { crate::bail!("not a f32 {self:?}") }
     }
 }
 
@@ -223,11 +215,7 @@ pub fn eval_ssa<const N: usize>(
                 let mut all_jump = true;
                 let mut any_jump = false;
                 for i in 0..N {
-                    if cond.0[i] == 0 {
-                        any_jump = true
-                    } else {
-                        all_jump = false
-                    }
+                    if cond.0[i] == 0 { any_jump = true } else { all_jump = false }
                 }
                 if all_jump != any_jump {
                     crate::bail!("diverging threads in warp")
@@ -252,11 +240,7 @@ pub fn eval_ssa<const N: usize>(
                     let mut all_jump = true;
                     let mut any_jump = false;
                     for i in 0..N {
-                        if v.0[i] >= up.0[i] {
-                            any_jump = true
-                        } else {
-                            all_jump = false
-                        }
+                        if v.0[i] >= up.0[i] { any_jump = true } else { all_jump = false }
                     }
                     if all_jump != any_jump {
                         crate::bail!("diverging threads in warp")

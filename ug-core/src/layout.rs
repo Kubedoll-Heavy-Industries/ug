@@ -1,5 +1,5 @@
 //! The shape of a tensor is a tuple with the size of each of its dimensions.
-use crate::{bail, Error, Result};
+use crate::{Error, Result, bail};
 
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Shape(Vec<usize>);
@@ -443,7 +443,7 @@ fn hole_size(el_count: usize, prod_d: usize, s: &dyn std::fmt::Debug) -> Result<
     if prod_d == 0 {
         bail!("cannot reshape tensor of {el_count} elements to {s:?}")
     }
-    if el_count % prod_d != 0 {
+    if !el_count.is_multiple_of(prod_d) {
         bail!("cannot reshape tensor with {el_count} elements to {s:?}")
     }
     Ok(el_count / prod_d)

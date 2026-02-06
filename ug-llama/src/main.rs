@@ -13,11 +13,7 @@ use model::{Cache, Model};
 pub type LB<D> = ug::LazyBuffer<D>;
 pub type ST = ug::safetensors::MmapedSafetensors;
 
-#[allow(unused)]
-const UNK_TOKEN: u32 = 0;
 const BOS_TOKEN: u32 = 1;
-#[allow(unused)]
-const EOS_TOKEN: u32 = 2;
 
 pub trait Device: ug::Device {
     fn rope_i(src: &LB<Self>, cos: &LB<Self>, sin: &LB<Self>, pos: &LB<Self>) -> Result<LB<Self>>;
@@ -148,7 +144,7 @@ fn run<D: Device>(dev: &D, args: &Args) -> Result<()> {
         schedule.run()?;
         let prs = tensor.data_vec::<f32>()?;
         let dt_run = start_time.elapsed();
-        let dist = rand_distr::WeightedIndex::new(prs).map_err(Error::wrap)?;
+        let dist = rand::distr::weighted::WeightedIndex::new(prs).map_err(Error::wrap)?;
         last_token = dist.sample(&mut rng) as u32;
         let token = tokenizer.id_to_token(last_token);
         if args.verbose {

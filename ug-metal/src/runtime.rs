@@ -162,7 +162,7 @@ impl ug::Device for Device {
             Some(name) => &format!("ug_{name}_{kernel_id}"),
             None => &format!("ug_{kernel_id}"),
         };
-        crate::code_gen::gen(&mut buf, name, kernel)?;
+        crate::code_gen::generate(&mut buf, name, kernel)?;
         let metal_code = String::from_utf8(buf)?;
         self.compile_metal(&metal_code, name, *kernel.launch_config())
     }

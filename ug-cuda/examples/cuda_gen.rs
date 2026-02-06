@@ -4,7 +4,7 @@ fn eval_add() -> Result<()> {
     let kernel = ug::samples::ssa::simple_add(1024)?;
     println!("{kernel:?}");
     let mut w = std::io::stdout();
-    ug_cuda::code_gen::gen(&mut w, "add", &kernel)?;
+    ug_cuda::code_gen::generate(&mut w, "add", &kernel)?;
     Ok(())
 }
 
@@ -12,7 +12,7 @@ fn eval_dotprod() -> Result<()> {
     let kernel = ug::samples::ssa::simple_dotprod(1024)?;
     println!("{kernel:?}");
     let mut buf = vec![];
-    ug_cuda::code_gen::gen(&mut buf, "dotprod", &kernel)?;
+    ug_cuda::code_gen::generate(&mut buf, "dotprod", &kernel)?;
     let cuda_code = String::from_utf8(buf)?;
     println!("<<<< CUDA CODE >>>>\n{cuda_code}\nflops-mem: {:?}", kernel.flops_mem_per_thread()?);
     let device = ug_cuda::runtime::Device::new(0)?;
@@ -36,7 +36,7 @@ fn eval_lower_add() -> Result<()> {
     let kernel = kernel.lower()?;
     println!("<<<< ADD SSA >>>>\n{kernel:?}");
     let mut buf = vec![];
-    ug_cuda::code_gen::gen(&mut buf, "dotprod", &kernel)?;
+    ug_cuda::code_gen::generate(&mut buf, "dotprod", &kernel)?;
     let cuda_code = String::from_utf8(buf)?;
     println!("<<<< CUDA CODE >>>>\n{cuda_code}\nflops-mem: {:?}", kernel.flops_mem_per_thread()?);
     let device = ug_cuda::runtime::Device::new(0)?;
@@ -60,7 +60,7 @@ fn eval_softmax() -> Result<()> {
     let kernel = kernel.lower(&Default::default())?;
     println!("<<<< ADD SSA >>>>\n{kernel:?}");
     let mut buf = vec![];
-    ug_cuda::code_gen::gen(&mut buf, "dotprod", &kernel)?;
+    ug_cuda::code_gen::generate(&mut buf, "dotprod", &kernel)?;
     let cuda_code = String::from_utf8(buf)?;
     println!("<<<< CUDA CODE >>>>\n{cuda_code}\nflops-mem: {:?}", kernel.flops_mem_per_thread()?);
     let device = ug_cuda::runtime::Device::new(0)?;

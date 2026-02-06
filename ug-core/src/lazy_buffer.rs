@@ -1,4 +1,4 @@
-use crate::{bail, Const, DType, Device, Dim, Result, Shape};
+use crate::{Const, DType, Device, Dim, Result, Shape, bail};
 use std::cell::RefCell;
 use std::sync::Arc;
 
@@ -113,7 +113,7 @@ pub struct LazyBufferInner<D: Device> {
 
 impl<D: Device> LazyBuffer<D> {
     #[allow(clippy::missing_safety_doc)]
-    pub unsafe fn maybe_allocate_uninit(&self) -> Result<()> {
+    pub unsafe fn maybe_allocate_uninit(&self) -> Result<()> { unsafe {
         let mut data = self.data.try_borrow_mut()?;
         if data.is_none() {
             let nels = self.shape.num_elements();
@@ -121,7 +121,7 @@ impl<D: Device> LazyBuffer<D> {
             *data = Some(v)
         }
         Ok(())
-    }
+    }}
 
     pub fn op(&self) -> &Op<D> {
         &self.op

@@ -118,7 +118,7 @@ fn ssa_softmax_reduce() -> Result<()> {
 #[test]
 fn affine() -> Result<()> {
     let kernel = {
-        use ug::{lang::op, DType, Layout};
+        use ug::{DType, Layout, lang::op};
         let layout = Layout::from_shape(4);
         let ptr = ug::lang::Arg::ptr(DType::F32);
         let src = op::load(ptr.id(), layout.clone(), DType::F32)?;
