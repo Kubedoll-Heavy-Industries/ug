@@ -41,7 +41,7 @@ memmap2 = { version = "0.9.5", features = ["stable_deref_trait"] }
 metal = "0.33"
 num = "0.4.3"
 num-traits = "0.2.19"
-objc = "0.2.7"
+objc2 = "0.6"
 ug = { path = "./ug-core", version = "0.5.0" }
 ug-cuda = { path = "./ug-cuda", version = "0.5.0" }
 ug-metal = { path = "./ug-metal", version = "0.5.0" }

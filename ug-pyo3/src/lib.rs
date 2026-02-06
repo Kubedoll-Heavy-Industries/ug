@@ -196,9 +196,9 @@ mod op {
             Ok(Self(ast))
         }
 
-        fn shape(&self, py: Python) -> PyObject {
+        fn shape(&self, py: Python) -> PyResult<PyObject> {
             let shape = self.0.shape().dims().to_vec();
-            pyo3::types::PyTuple::new_bound(py, shape).into_py(py)
+            Ok(pyo3::types::PyTuple::new(py, shape)?.into_any().unbind())
         }
     }
 
@@ -600,18 +600,18 @@ impl Kernel {
 #[pymodule]
 #[pyo3(name = "ug")]
 fn mod_(py: Python, m: &Bound<PyModule>) -> PyResult<()> {
-    let ssa = PyModule::new_bound(py, "ssa")?;
+    let ssa = PyModule::new(py, "ssa")?;
     ssa.add_class::<ssa::Kernel>()?;
     ssa.add_class::<ssa::Instr>()?;
 
-    let lang = PyModule::new_bound(py, "lang")?;
+    let lang = PyModule::new(py, "lang")?;
     lang.add_class::<Kernel>()?;
     lang.add_class::<Ops>()?;
     lang.add_class::<Arg>()?;
     lang.add_class::<Expr>()?;
     lang.add_class::<IndexExpr>()?;
 
-    let op = PyModule::new_bound(py, "op")?;
+    let op = PyModule::new(py, "op")?;
     op.add_class::<op::Arg>()?;
     op.add_class::<op::Ast>()?;
     op.add_class::<op::Kernel>()?;
@@ -629,8 +629,8 @@ fn mod_(py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_submodule(&op)?;
     // Manually populate sys.modules, see:
     // https://github.com/PyO3/pyo3/issues/759
-    py.import_bound("sys")?.getattr("modules")?.set_item("ug.lang", lang)?;
-    py.import_bound("sys")?.getattr("modules")?.set_item("ug.ssa", ssa)?;
-    py.import_bound("sys")?.getattr("modules")?.set_item("ug.op", op)?;
+    py.import("sys")?.getattr("modules")?.set_item("ug.lang", lang)?;
+    py.import("sys")?.getattr("modules")?.set_item("ug.ssa", ssa)?;
+    py.import("sys")?.getattr("modules")?.set_item("ug.op", op)?;
     Ok(())
 }

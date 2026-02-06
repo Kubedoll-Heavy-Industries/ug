@@ -13,7 +13,6 @@ workspace = true
 
 [dependencies]
 metal = { workspace = true }
-objc = { workspace = true }
 half = { workspace = true }
 serde = { workspace = true }
 thiserror = { workspace = true }
@@ -21,4 +20,5 @@ ug = { workspace = true }
 
 [dev-dependencies]
 clap = { workspace = true }
+objc2 = { workspace = true }
 rand = { workspace = true }

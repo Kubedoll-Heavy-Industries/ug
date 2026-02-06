@@ -126,7 +126,7 @@ fn main() -> Result<()> {
         // SAFETY: This is called at program startup before any other threads are spawned
         unsafe { std::env::set_var("METAL_DEVICE_WRAPPER_TYPE", "1") }
     }
-    objc::rc::autoreleasepool(|| {
+    objc2::rc::autoreleasepool(|_pool| {
         for n_cols in [128, 256, 512, 768, 1024, 1536, 2048, 3072, 4096] {
             run_one(&args, n_cols)?;
         }
