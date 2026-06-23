@@ -54,6 +54,7 @@ fn gemm_config<T>(
         ldc: n as i32,
         transa,
         transb,
+        algo: sys::cublasGemmAlgo_t::CUBLAS_GEMM_DEFAULT_TENSOR_OP,
     };
 
     let stride_b: usize = match lhs_stride[..lhs_stride.len() - 2] {
