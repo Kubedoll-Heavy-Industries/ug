@@ -1,6 +1,6 @@
 // This benchmark has a setup similar to the triton benchmark:
 // https://triton-lang.org/main/getting-started/tutorials/02-fused-softmax.html
-use rand::Rng;
+use rand::RngExt;
 use ug::Result;
 
 #[derive(clap::ValueEnum, Clone, Debug)]

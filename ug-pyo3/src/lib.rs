@@ -196,7 +196,7 @@ mod op {
             Ok(Self(ast))
         }
 
-        fn shape(&self, py: Python) -> PyResult<PyObject> {
+        fn shape(&self, py: Python) -> PyResult<Py<PyAny>> {
             let shape = self.0.shape().dims().to_vec();
             Ok(pyo3::types::PyTuple::new(py, shape)?.into_any().unbind())
         }
